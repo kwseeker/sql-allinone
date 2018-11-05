@@ -6,7 +6,12 @@
 [MySQL组成与工作原理](./MySQL组成与工作原理.md)  
 [MySQL存储引擎](./MySQL存储引擎.md)
 
-测试使用的是官方的测试数据库employees
+
+目标：  
+数据备份应用；  
+
+
+测试使用的是官方的测试数据库employees, 地址：https://github.com/datacharmer/test_db.git
 
 + 6张表的数据结构
 ```
