@@ -80,7 +80,7 @@ MySQL支持使用多种存储引擎，但是最常用的是InnoDB和MyISAM。
   select * from employees where first_name = 'Elvia' for update;    --3 会被阻塞（共享锁和排他锁互斥）
   ```
 
-+ **乐观锁和悲观锁**
++ **乐观锁和悲观锁**  
   乐观锁和悲观锁并不是数据库中实现的锁机制，是需要我们自己实现的。
 
   乐观锁：  
@@ -92,7 +92,7 @@ MySQL支持使用多种存储引擎，但是最常用的是InnoDB和MyISAM。
 
 + **活锁与死锁，死锁的解除**
 
-  - **活锁**
+  - **活锁**  
     事务T1封锁数据对象R, 事务T2也请求封锁R, 于是T2等待；接着T3也请求封锁R； 当T1释放锁后，系统批准了T3的请求，后面T4也请求封锁R, 系统等T3释放锁后又批准了T4的请求；这样循环一直轮不到T2获取锁，这种情况叫做活锁。
 
     解决方法：
@@ -170,7 +170,7 @@ MySQL支持使用多种存储引擎，但是最常用的是InnoDB和MyISAM。
       -- 执行事务B update
       select * from departments； --2 
       -- 执行事务B commit
-      -- 执行事务C并commit
+      -- 执行事务C commit
       select * from departments； --3 
 
       -- 事务B
@@ -202,21 +202,24 @@ MySQL支持使用多种存储引擎，但是最常用的是InnoDB和MyISAM。
       大多数数据库使用这个隔离级别；  
       只允许读取到事务提交的数据，可以解决脏读（未提交读）问题。  
       原理：事务对当前被读取的数据加行级共享锁（当读到时才加锁），一旦读完该行，立即释放该行级共享锁；更新某数据的瞬间（就是发生更新的瞬间），必须先对其加 行级排他锁（写锁），直到事务结束才释放。  
+      
       A|B
       ---|---
       begin | begin
       select1(row_S,查完立即释放) | /
        / | update(row_X)
       select2(row_S,查完立即释放) | /
-      / | commit（释放row_X）
+      / | commit(释放row_X)
       select3(row_S,查完立即释放) | /
       commit | / 
+
       由上图可知，实际执行过程是select1 -> update -> select2 -> select3，select2读取的必定是update提交之后的数据，不存在脏读问题；由于select2 select3之间还有间隙，很可能在2，3之间发生对该行的修改操作，出现不可重复读问题。  
 
     3）可重复读（RR）  
       MySQL默认隔离级别；  
       可解决脏读和不可重复读；  
       原理：事务在读取某数据的瞬间（就是开始读取的瞬间），必须先对其加行级共享锁，直到事务结束才释放；更新某数据的瞬间（就是发生更新的瞬间），必须先对其加行级排他锁，直到事务结束才释放。   
+
       A|B
       ---|---
       begin | begin
@@ -225,9 +228,10 @@ MySQL支持使用多种存储引擎，但是最常用的是InnoDB和MyISAM。
       select2(row_S) | /
       / | commit（释放row_X）
       select3(row_S） | /
-      commit（释放row_S） | / 
+      commit(释放row_S)| / 
+
       这里三个查询语句是一起释放锁的，select1 -> select2 -> select3 -> update, 不存在脏读、不可重复读问题。  
-      如果没有1的话，update -> select2 -> select3, 2\3之间没有间隙，查询结果是相同的。
+      如果没有1的话，update -> select2 -> select3, 2\3之间没有间隙（3个查询三位一体），查询结果是相同的。
 
     4）可串行化  
       可解决脏读、不可重复读、幻读；  
